@@ -15,8 +15,9 @@ __email__ = "amri.aymen@gmail.com"
 # or just keep it if you're using *nix system.
 # ================================================================================================
 
-USERHASH = ""
+USERHASH = "ENTER YOUR USERHASH HERE"
 TEMPDIR = "/tmp/"
+
 
 import os
 import urllib
@@ -110,7 +111,7 @@ def parse_xml(file):
                 length = "N/A"
             #IMDB Rating and URL
             try: 
-                rating = ImdbRating(title).rating
+                rating = ImdbRating(title).rating + "/10"
             except:
                 rating = "N/A"
               
@@ -135,25 +136,24 @@ def parse_xml(file):
 if __name__ == "__main__":
     url = "http://www.kazer.org/tvguide.zip?u="+ USERHASH
     
-#     try:
-#         file = getunzipped(url, TMPDIR)
-#     except:
-#         print ("XMLTV service is down or conncetion error")
-#         
+    try:
+        file = getunzipped(url, TEMPDIR)
+    except:
+        print ("XMLTV service is down or conncetion error")
+         
         
-    #try:
-    l = parse_xml("/home/eon/tvguide.xml")
-    for k in l:
-    #print ("%(title)s (%year)s rated on IMDB %s starts at %s on %s and lasts %s minutes , visit its page on IMDB %s" %\
-        title = k['title'] 
-        rating = str(k['rating']) + "/10 "
-        date = k['date']
-        start = k['start']
-        chan = k['chan']
-        length = k['length'] + "minutes "
-        url = k['url']
-        print title , rating, date, start, chan, length, url         
-        print("\n ============= ")
-#     except:
-#         #There is no movies exception
-#         print ("Bad luck! There 's no movies on your list buddy")
+    try:
+        l = parse_xml(file)
+        for k in l:
+            title = k['title']  + "\n"
+            rating = str(k['rating']) + "\n"
+            date = k['date'] + "\n"
+            start = k['start'] + "\n"
+            chan = k['chan'] + "\n"
+            length = k['length'] + "minutes " + "\n"
+            url = k['url'] + "\n"
+            print title , rating, date, start, chan, length, url         
+            print("\n ============= ")
+    except:
+         #When there is no movie on TV !
+         print ("Bad luck! There 's no movies on your list buddy")
