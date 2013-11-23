@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-# Add your USERHASH, you can get one here: http://kazer.org/ ,  you should create an account and you select the channels here http://kazer.org/my-channels.html,
-# then save your choice and run the script with your userhash. TMPDIR by default is /tmp/ just change it to whatever you want according to your OS, or just keep it if you're using *nix system.
+__author__ = "Aymen Amri aka eon, eon01"
+__copyright__ = "GNU GENERAL PUBLIC LICENSE Version 2"
+__license__ = "GPL"
+__version__ = "1.0.1"
+__maintainer__ = "https://github.com/eon01/TopMovieTonight"
+__email__ = "amri.aymen@gmail.com"
+# ================================================================================================
+# Add your USERHASH, you can get one here: http://kazer.org/ ,  
+# you should create an account and you select the channels here http://kazer.org/my-channels.html,
+# then save your choice and run the script with your userhash. 
+# TMPDIR (temporary directory for extracting the zip file containing xmltv data)
+# by default is /tmp/ just change it to whatever you want according to your OS, 
+# or just keep it if you're using *nix system.
+# ================================================================================================
 
 USERHASH = ""
 TEMPDIR = "/tmp/"
-
 
 import os
 import urllib
@@ -16,9 +26,15 @@ from oauthlib.common import urlencode
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 import sys,re
+sys.path.append("./res/")
 from IMDB import ImdbRating
 from time import sleep
+import time
 from tempfile import TemporaryFile
+from dateutil import parser
+from datetime import date
+import locale
+import json
 
 def getunzipped(theurl, thedir):
     
@@ -60,26 +76,57 @@ def parse_xml(file):
     for tv in root.findall('programme'):
         cat = tv.find('category').text
         if cat == "Film":
-            title = tv.find('title').text.encode('utf8')            
-            date = tv.find('date').text #.encode('utf8')
-            start = tv.get('start')
-            chan = tv.get('channel').split('.',1)[0]    
-            length = tv.find('length').text
-            
+            #Movie name
+            try:
+                title = tv.find('title').text.encode('utf8')
+            except:
+                title = "N/A"            
+            #Movie date
+            try:
+                date = tv.find('date').text #.encode('utf8')
+            except:
+                date = "N/A"
+            #Start date
+            try:
+                s = tv.get('start')
+                st = parser.parse(s)
+                lc = locale.getdefaultlocale()
+                locale.setlocale (locale.LC_ALL ,lc)
+                start = st.strftime('%A %C %B - %H:%M GMT+1')
+            except: 
+                start = "N/A"
+            #Channel
+            try :
+                c = tv.get('channel').split('.',1)[0]            
+                json_data=open('./res/channels.json')            
+                data = json.load(json_data)
+                chan = data[c]
+            except:
+                chan = "N/A"
+            #Movie length    
+            try:
+                length = tv.find('length').text
+            except:
+                length = "N/A"
+            #IMDB Rating and URL
             try: 
                 rating = ImdbRating(title).rating
             except:
-                rating = None
-             
+                rating = "N/A"
+              
             try:
                 url = ImdbRating(title).url
             except:
                 import urllib2
                 url = "http://www.imdb.com/find?q=" + urllib2.quote(title)
+            else:
+                import urllib2
+                url = "https://duckduckgo.com/?q=" + urllib2.quote(title)
+            #You can remove sleep, if you're sure .. The size of a json file can be more than 20 MB and the scrappping could take a long time
             sleep(1)
             d.append({ 'title':title ,'date':date, 'start':start, 'chan':chan, 'length':length, 'rating':rating, 'url':url})
             
-    newd = sorted(d, key=lambda k: k['rating'], reverse= True) 
+    newd = sorted(d, key=lambda k: k['rating'], reverse= True)
     return newd
                     
 
@@ -87,5 +134,26 @@ def parse_xml(file):
 
 if __name__ == "__main__":
     url = "http://www.kazer.org/tvguide.zip?u="+ USERHASH
-    file = getunzipped(url, TEMPDIR)
-    print parse_xml(file)
+    
+#     try:
+#         file = getunzipped(url, TMPDIR)
+#     except:
+#         print ("XMLTV service is down or conncetion error")
+#         
+        
+    #try:
+    l = parse_xml("/home/eon/tvguide.xml")
+    for k in l:
+    #print ("%(title)s (%year)s rated on IMDB %s starts at %s on %s and lasts %s minutes , visit its page on IMDB %s" %\
+        title = k['title'] 
+        rating = str(k['rating']) + "/10 "
+        date = k['date']
+        start = k['start']
+        chan = k['chan']
+        length = k['length'] + "minutes "
+        url = k['url']
+        print title , rating, date, start, chan, length, url         
+        print("\n ============= ")
+#     except:
+#         #There is no movies exception
+#         print ("Bad luck! There 's no movies on your list buddy")
