@@ -24,3 +24,7 @@ WantToClone?
 ========
 
 git clone https://github.com/eon01/TopMovieTonight.git
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/eon01/topmovietonight/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
